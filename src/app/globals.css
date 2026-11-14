@@ -1,0 +1,315 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME TOKENS
+   - ธีมสว่าง: โทนขาวอมม่วงอ่อน (Soft Lavender Ivory) ไม่ขาวจ้าเกินไป
+   - ธีมมืด: โทนเทาอมม่วงเข้ม ตัวหนังสือคอนทราสต์สูง อ่านง่าย
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-noto-sans-thai: 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
+  --font-noto-serif-thai: 'Noto Serif Thai', Georgia, serif;
+  --brand-purple: #5c2484;
+  --brand-purple-dark: #421861;
+  --brand-purple-light: #f5eef9;
+
+  /* พื้นผิว (Surfaces) – ธีมสว่าง */
+  --page-bg: #efebf3;          /* พื้นหลังหน้า */
+  --page-bg-glass: rgba(239, 235, 243, 0.85);
+  --surface: #fcfbfd;          /* การ์ด / แถบเมนู (แทน bg-white) */
+  --surface-muted: #f5f1f8;    /* หัวตาราง / กล่องย่อย (แทน #fafafa) */
+  --surface-hover: #ede7f2;    /* hover แถว */
+  --brand-soft: #f0e6f7;       /* แท็บ/ปุ่มม่วงอ่อน (แทน #f5eef9) */
+  --brand-soft-hover: #e5d5f0;
+  --track: #e4dde9;            /* แถบ progress (แทน #eeeeee) */
+  --border: #e3dce8;           /* เส้นขอบการ์ด (แทน #eeeeee) */
+  --border-mid: #d9d0df;       /* (แทน #dddddd) */
+  --border-input: #cbc2d2;     /* ขอบ input (แทน #cccccc) */
+  --input-bg: #ffffff;
+
+  --neutral-bg: var(--page-bg);
+  --neutral-border: var(--border);
+  --text-primary: #222222;
+  --text-secondary: #555555;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  /* พื้นผิว (Surfaces) – ธีมมืด */
+  --page-bg: #131117;
+  --page-bg-glass: rgba(19, 17, 23, 0.85);
+  --surface: #1c1922;
+  --surface-muted: #221e29;
+  --surface-hover: #2a2532;
+  --brand-soft: #34214a;
+  --brand-soft-hover: #432a5f;
+  --track: #2f2a37;
+  --border: #322c3b;
+  --border-mid: #3b3545;
+  --border-input: #4a4356;
+  --input-bg: #17141c;
+
+  /* ตัวหนังสือ – ธีมมืด (คอนทราสต์สูง) */
+  --t-strong: #f4f1f7;
+  --t-body: #e4dfe9;
+  --t-soft: #d0c9d7;
+  --t-muted: #b5adbd;
+  --t-faint: #9a92a3;
+  --t-brand: #d6aef7;
+  --t-red: #ff9393;
+  --t-green: #8ee792;
+  --t-yellow: #f5d76e;
+  --t-blue: #a9c3ff;
+
+  --neutral-bg: var(--page-bg);
+  --neutral-border: var(--border);
+  --text-primary: var(--t-strong);
+  --text-secondary: var(--t-soft);
+}
+
+body {
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+  font-family: var(--font-noto-sans-thai), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ───────── SURFACES (ใช้ได้ทั้งสองธีม) ───────── */
+.bg-white {
+  background-color: var(--surface) !important;
+}
+.bg-\[\#fafafa\] {
+  background-color: var(--surface-muted) !important;
+}
+.bg-\[\#fafafa\]\/85 {
+  background-color: var(--page-bg-glass) !important;
+}
+.min-h-screen.bg-\[\#fafafa\] {
+  background-color: var(--page-bg) !important;
+}
+.hover\:bg-\[\#fafafa\]:hover {
+  background-color: var(--surface-hover) !important;
+}
+.bg-\[\#f5eef9\] {
+  background-color: var(--brand-soft) !important;
+}
+.hover\:bg-\[\#f5eef9\]:hover {
+  background-color: var(--brand-soft-hover) !important;
+}
+.hover\:bg-\[\#f5eef9\]\/40:hover {
+  background-color: var(--brand-soft) !important;
+}
+.hover\:bg-white:hover {
+  background-color: var(--surface) !important;
+}
+.hover\:bg-\[\#f8e4e4\]:hover {
+  background-color: #f8e4e4 !important;
+}
+.hover\:bg-\[\#eadcf3\]:hover {
+  background-color: #eadcf3 !important;
+}
+.bg-\[\#eeeeee\] {
+  background-color: var(--track) !important;
+}
+.border-\[\#eeeeee\] {
+  border-color: var(--border) !important;
+}
+.border-\[\#dddddd\] {
+  border-color: var(--border-mid) !important;
+}
+.border-\[\#cccccc\] {
+  border-color: var(--border-input) !important;
+}
+.divide-\[\#eeeeee\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border) !important;
+}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]), select, textarea) {
+  background-color: var(--input-bg);
+}
+
+/* ───────── DARK MODE: ตัวหนังสือ ───────── */
+html.dark body {
+  background-color: var(--page-bg);
+  color: var(--t-strong);
+}
+
+html.dark .text-\[\#222222\],
+html.dark .hover\:text-\[\#222222\]:hover {
+  color: var(--t-strong) !important;
+}
+html.dark .text-\[\#333333\] {
+  color: var(--t-body) !important;
+}
+html.dark .text-\[\#444444\],
+html.dark .text-\[\#555555\] {
+  color: var(--t-soft) !important;
+}
+html.dark .text-\[\#666666\],
+html.dark .text-\[\#777777\] {
+  color: var(--t-muted) !important;
+}
+html.dark .text-\[\#888888\],
+html.dark .text-\[\#999999\] {
+  color: var(--t-faint) !important;
+}
+
+/* สีเน้นม่วง → ม่วงสว่างเพื่อให้อ่านได้บนพื้นมืด */
+html.dark .text-\[\#5c2484\],
+html.dark .hover\:text-\[\#5c2484\]:hover,
+html.dark .file\:text-\[\#5c2484\]::file-selector-button {
+  color: var(--t-brand) !important;
+}
+html.dark .border-\[\#5c2484\],
+html.dark .hover\:border-\[\#5c2484\]:hover {
+  border-color: #9a68c7 !important;
+}
+html.dark .border-\[\#5c2484\]\/20 {
+  border-color: rgba(214, 174, 247, 0.3) !important;
+}
+html.dark .ring-\[\#5c2484\] {
+  --tw-ring-color: #9a68c7 !important;
+}
+
+/* สีสถานะ: แดง / เขียว / เหลือง / น้ำเงิน */
+html.dark .text-\[\#ac2d2d\],
+html.dark .hover\:text-\[\#ac2d2d\]:hover {
+  color: var(--t-red) !important;
+}
+html.dark .text-\[\#114e0b\] {
+  color: var(--t-green) !important;
+}
+html.dark .text-\[\#5e5515\] {
+  color: var(--t-yellow) !important;
+}
+html.dark .text-\[\#080331\],
+html.dark .text-\[\#2d62ff\] {
+  color: var(--t-blue) !important;
+}
+
+/* พื้นหลังป้ายสถานะ → โทนโปร่งแสงบนพื้นมืด */
+html.dark .bg-\[\#cef5ca\] {
+  background-color: rgba(74, 222, 128, 0.16) !important;
+}
+html.dark .bg-\[\#f8e4e4\],
+html.dark .hover\:bg-\[\#f8e4e4\]:hover {
+  background-color: rgba(248, 113, 113, 0.17) !important;
+}
+html.dark .bg-\[\#f8e4e4\]\/60,
+html.dark .hover\:bg-\[\#f8e4e4\]\/60:hover {
+  background-color: rgba(248, 113, 113, 0.13) !important;
+}
+html.dark .hover\:bg-\[\#f3d1d1\]:hover {
+  background-color: rgba(248, 113, 113, 0.26) !important;
+}
+html.dark .bg-\[\#fcf8d8\] {
+  background-color: rgba(250, 204, 21, 0.14) !important;
+}
+html.dark .bg-\[\#d9e5ff\] {
+  background-color: rgba(96, 165, 250, 0.18) !important;
+}
+html.dark .bg-\[\#eadcf3\],
+html.dark .hover\:bg-\[\#eadcf3\]:hover {
+  background-color: #4a2f68 !important;
+}
+html.dark .file\:bg-\[\#f5eef9\]::file-selector-button {
+  background-color: var(--brand-soft) !important;
+}
+html.dark .bg-\[\#f5eef9\]\/35,
+html.dark .bg-\[\#f5eef9\]\/60,
+html.dark .hover\:bg-\[\#f5eef9\]\/40:hover {
+  background-color: rgba(52, 33, 74, 0.6) !important;
+}
+html.dark .bg-\[\#eeeeee\]\/70 {
+  background-color: rgba(47, 42, 55, 0.7) !important;
+}
+html.dark .bg-\[\#dddddd\] {
+  background-color: var(--border-mid) !important;
+}
+
+/* ปุ่ม/ป้ายสีดำ (#222) → เทาอมม่วง เพื่อไม่ให้กลืนไปกับพื้นมืด */
+html.dark .bg-\[\#222222\] {
+  background-color: #3d3647 !important;
+}
+html.dark .hover\:bg-black:hover,
+html.dark .hover\:bg-\[\#000000\]:hover {
+  background-color: #4b4357 !important;
+}
+html.dark .border-\[\#222222\] {
+  border-color: #5a5166 !important;
+}
+
+/* ป้ายสีขาวโปร่งบนรูปภาพ (เช่น "ห้อง 101") */
+html.dark .bg-white\/95,
+html.dark .bg-white\/70 {
+  background-color: rgba(28, 25, 34, 0.9) !important;
+}
+
+/* ฟอร์ม */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  color: var(--t-strong) !important;
+  border-color: var(--border-input) !important;
+}
+html.dark select option {
+  background-color: var(--surface);
+  color: var(--t-strong);
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #8a8293 !important;
+}
+html.dark input[type="date"]::-webkit-calendar-picker-indicator,
+html.dark input[type="time"]::-webkit-calendar-picker-indicator,
+html.dark input[type="month"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+}
+
+/* เงาการ์ดให้เห็นขอบชัดขึ้นในโหมดมืด */
+html.dark .shadow-sm {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* ───────── PRINTABLE STYLES ───────── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: #222222 !important;
+    padding: 24px !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  /* พิมพ์ใบเสร็จจากโหมดมืด: บังคับกลับเป็นกระดาษขาว ตัวหนังสือเข้ม */
+  html.dark #printable-receipt [class*="text-"] {
+    color: #222222 !important;
+  }
+  html.dark #printable-receipt .text-\[\#5c2484\] {
+    color: #5c2484 !important;
+  }
+  html.dark #printable-receipt [class*="bg-"] {
+    background-color: #ffffff !important;
+  }
+  html.dark #printable-receipt [class*="border"] {
+    border-color: #e5e5e5 !important;
+  }
+}

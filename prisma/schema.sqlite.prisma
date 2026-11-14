@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Setting {
+  id                  Int      @id @default(1)
+  propertyName        String   @default("The Inn Retford Residence")
+  propertyAddress     String   @default("123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110")
+  propertyPhone       String   @default("081-234-5678")
+  waterRate           Float    @default(18)     // บาท/หน่วย
+  electricRate        Float    @default(8)      // บาท/หน่วย
+  lateFeePerDay       Float    @default(50)     // บาท/วัน (รายเดือน)
+  checkInTime         String   @default("14:00")
+  checkOutTime        String   @default("12:00")
+  leaseWarningDays    Int      @default(30)     // แจ้งเตือนสัญญาก่อนหมด (วัน)
+  promptPayId         String   @default("0812345678")
+  promptPayQrUrl      String   @default("")     // รูปภาพ QR Code PromptPay / บัญชีธนาคารสำหรับรับเงิน
+  loginImageUrl       String   @default("")     // รูปภาพหน้าเข้าสู่ระบบ (Login Image)
+  passwordHash        String   @default("")     // หากว่าง รหัสเริ่มต้นคือ admin1234
+  updatedAt           DateTime @updatedAt
+}
+
+model Room {
+  id            String         @id @default(cuid())
+  number        String         @unique
+  name          String
+  floor         Int            @default(1)
+  roomType      String         @default("Standard")
+  dailyRate     Float          @default(800)    // บาท/คืน
+  monthlyRate   Float          @default(6500)   // บาท/เดือน
+  status        String         @default("AVAILABLE") // AVAILABLE, OCCUPIED, RESERVED, CLEANING, MAINTENANCE
+  imageUrl      String         @default("")
+  notes         String         @default("")
+  isSample      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  bookings      Booking[]
+  leases        Lease[]
+  meterReadings MeterReading[]
+  invoices      Invoice[]
+}
+
+model Guest {
+  id            String    @id @default(cuid())
+  fullName      String
+  phone         String    @default("")
+  idCardNumber  String    @default("")
+  email         String    @default("")
+  lineId        String    @default("")    // LINE ID หรือ ลิงก์ LINE ผู้เช่า
+  address       String    @default("")
+  emergencyName String    @default("")
+  emergencyPhone String   @default("")
+  idCardDocUrl  String    @default("")
+  notes         String    @default("")
+  isSample      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  bookings      Booking[]
+  leases        Lease[]
+}
+
+model Booking {
+  id              String          @id @default(cuid())
+  bookingNumber   String          @unique
+  roomId          String
+  room            Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  guestId         String?
+  guest           Guest?          @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  guestName       String
+  guestPhone      String          @default("")
+  guestIdCard     String          @default("")
+  checkInDate     String          // YYYY-MM-DD (เข้า 14:00)
+  checkOutDate    String          // YYYY-MM-DD (ออกก่อน 12:00)
+  nights          Int             @default(1)
+  dailyRate       Float           @default(800)
+  deposit         Float           @default(0)
+  discount        Float           @default(0)
+  paidAmount      Float           @default(0)
+  paymentMethod   String          @default("CASH") // CASH, TRANSFER, PROMPTPAY
+  status          String          @default("CONFIRMED") // CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED
+  actualCheckIn   DateTime?
+  actualCheckOut  DateTime?
+  notes           String          @default("")
+  isSample        Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  charges         BookingCharge[]
+}
+
+model BookingCharge {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  description String
+  amount      Float
+  createdAt   DateTime @default(now())
+}
+
+model Lease {
+  id                String    @id @default(cuid())
+  leaseNumber       String    @unique
+  roomId            String
+  room              Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  guestId           String?
+  guest             Guest?    @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  tenantName        String
+  tenantPhone       String    @default("")
+  tenantIdCard      String    @default("")
+  tenantLineId      String    @default("")  // LINE ID หรือ ลิงก์ LINE ผู้เช่า
+  startDate         String    // YYYY-MM-DD
+  endDate           String    // YYYY-MM-DD
+  monthlyRent       Float
+  securityDeposit   Float     @default(0)
+  contractFileUrl   String    @default("")
+  status            String    @default("ACTIVE") // ACTIVE, MOVED_OUT, TERMINATED
+  moveOutDate       String?   // YYYY-MM-DD
+  damageDeduction   Float     @default(0)
+  unpaidDeduction   Float     @default(0)
+  depositRefunded   Float     @default(0)
+  notes             String    @default("")
+  isSample          Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  invoices          Invoice[]
+}
+
+model MeterReading {
+  id           String   @id @default(cuid())
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  billingMonth String   // YYYY-MM
+  prevWater    Float    @default(0)
+  currWater    Float    @default(0)
+  waterUnits   Float    @default(0)
+  prevElectric Float    @default(0)
+  currElectric Float    @default(0)
+  electricUnits Float   @default(0)
+  isSample     Boolean  @default(false)
+  recordedAt   DateTime @default(now())
+
+  @@unique([roomId, billingMonth])
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String        @unique
+  leaseId         String
+  lease           Lease         @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  roomId          String
+  room            Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  billingMonth    String        // YYYY-MM
+  issueDate       String        // YYYY-MM-DD
+  dueDate         String        // YYYY-MM-DD
+  rentAmount      Float         @default(0)
+  waterUnits      Float         @default(0)
+  waterRate       Float         @default(0)
+  waterAmount     Float         @default(0)
+  electricUnits   Float         @default(0)
+  electricRate    Float         @default(0)
+  electricAmount  Float         @default(0)
+  otherAmount     Float         @default(0)
+  otherNote       String        @default("")
+  lateDays        Int           @default(0)
+  lateFeeAmount   Float         @default(0)
+  totalAmount     Float         @default(0)
+  paidAmount      Float         @default(0)
+  status          String        @default("UNPAID") // UNPAID, PARTIAL, PAID, OVERDUE
+  paidAt          DateTime?
+  paymentMethod   String        @default("")
+  isSample        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
