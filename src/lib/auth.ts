@@ -27,7 +27,36 @@ export async function isAuthenticated(): Promise<boolean> {
   return verifyToken(token);
 }
 
-export async function verifyAdminPassword(password: string): Promise<boolean> {
+export async function verifyAdminPassword(password: string, username = "admin"): Promise<boolean> {
+  const targetUser = (username || "admin").trim();
+
+  // 1. ตรวจสอบจากตาราง AdminUser ในฐานข้อมูล
+  try {
+    // @ts-expect-error adminUser model
+    const admin = await prisma.adminUser.findFirst({
+      where: {
+        OR: [
+          { username: targetUser },
+          { id: targetUser },
+        ],
+      },
+    });
+
+    if (admin) {
+      if (admin.passwordHash.startsWith("$2a$") || admin.passwordHash.startsWith("$2b$")) {
+        return bcrypt.compare(password, admin.passwordHash);
+      }
+      return admin.passwordHash === password;
+    }
+  } catch (e: any) {
+    // หากยังไม่ได้รันสร้างตาราง AdminUser ให้ข้ามไปตรวจตาราง Setting
+    const msg = e?.message || "";
+    if (!msg.includes("does not exist") && !msg.includes("relation") && !msg.includes("Table")) {
+      throw e;
+    }
+  }
+
+  // 2. ตรวจสอบจากตาราง Setting
   let setting = await prisma.setting.findUnique({ where: { id: 1 } });
   if (!setting) {
     setting = await prisma.setting.create({ data: { id: 1 } });

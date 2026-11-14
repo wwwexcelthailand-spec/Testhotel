@@ -33,6 +33,17 @@ export async function seedSampleData() {
   await clearSampleData();
 
   const passwordHash = await bcrypt.hash("admin1234", 10);
+  await prisma.adminUser.upsert({
+    where: { username: "admin" },
+    update: { passwordHash },
+    create: {
+      id: "admin",
+      username: "admin",
+      passwordHash,
+      name: "เจ้าของหอพัก (Admin)",
+      role: "ADMIN",
+    },
+  });
   await prisma.setting.upsert({
     where: { id: 1 },
     update: {},

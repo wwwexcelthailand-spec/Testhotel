@@ -10,6 +10,7 @@ const DEFAULT_LOGIN_IMAGE =
 
 export default function LoginPage() {
   const router = useRouter();
+  const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -144,18 +145,36 @@ export default function LoginPage() {
                 เข้าสู่ระบบเจ้าของหอพัก
               </h2>
               <p className="text-xs text-[#666666]">
-                Single Admin Access · กรอกรหัสผ่านเพื่อเข้าใช้งาน
+                Single Admin Access · เข้าใช้งานด้วย ID: admin
               </p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-[#222222] mb-1.5"
+              >
+                ชื่อผู้ใช้ (Username / ID)
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
+                required
+                className="w-full px-4 py-2.5 rounded-xl border border-[#cccccc] bg-white text-[#222222] text-sm focus:outline-none focus:ring-2 focus:ring-[#5c2484] focus:border-transparent transition"
+              />
+            </div>
+
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-[#222222] mb-2"
+                className="block text-sm font-medium text-[#222222] mb-1.5"
               >
-                รหัสผ่านผู้ดูแลระบบ
+                รหัสผ่าน (Password)
               </label>
               <input
                 id="password"
@@ -165,12 +184,12 @@ export default function LoginPage() {
                 placeholder="กรอกรหัสผ่าน..."
                 autoFocus
                 required
-                className="w-full px-4 py-3 rounded-xl border border-[#cccccc] bg-white text-[#222222] text-sm focus:outline-none focus:ring-2 focus:ring-[#5c2484] focus:border-transparent transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#cccccc] bg-white text-[#222222] text-sm focus:outline-none focus:ring-2 focus:ring-[#5c2484] focus:border-transparent transition"
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-[#f8e4e4] text-[#ac2d2d] text-xs font-medium">
+              <div className="p-3.5 rounded-xl bg-[#f8e4e4] text-[#ac2d2d] text-xs font-medium leading-relaxed border border-[#f1c3c3] whitespace-pre-line">
                 {error}
               </div>
             )}

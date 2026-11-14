@@ -18,9 +18,15 @@ export async function GET() {
       hasCustomPassword: Boolean(passwordHash),
       sampleRoomsCount,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET /api/settings error:", error);
-    return NextResponse.json({ error: "ไม่สามารถดึงข้อมูลตั้งค่าได้" }, { status: 500 });
+    return NextResponse.json(
+      { 
+        error: "ไม่สามารถดึงข้อมูลตั้งค่าได้",
+        detail: error?.message || String(error),
+      }, 
+      { status: 500 }
+    );
   }
 }
 
@@ -58,7 +64,24 @@ export async function PUT(request: Request) {
     if (loginImageUrl !== undefined) data.loginImageUrl = String(loginImageUrl).trim();
 
     if (newPassword && String(newPassword).trim().length >= 4) {
-      data.passwordHash = await bcrypt.hash(String(newPassword).trim(), 10);
+      const hashed = await bcrypt.hash(String(newPassword).trim(), 10);
+      data.passwordHash = hashed;
+      try {
+        // @ts-expect-error adminUser model
+        await prisma.adminUser.upsert({
+          where: { username: "admin" },
+          update: { passwordHash: hashed },
+          create: {
+            id: "admin",
+            username: "admin",
+            passwordHash: hashed,
+            name: "เจ้าของหอพัก (Admin)",
+            role: "ADMIN",
+          },
+        });
+      } catch (e) {
+        console.warn("Could not sync to AdminUser table:", e);
+      }
     }
 
     const updated = await prisma.setting.upsert({

@@ -5,6 +5,20 @@
 
 -- 1. สร้างตารางทั้งหมด (Tables & Constraints)
 
+-- ตาราง AdminUser: ผู้ดูแลระบบ / เจ้าของหอพัก (id: admin, password: admin1234)
+CREATE TABLE IF NOT EXISTS "AdminUser" (
+    "id" TEXT NOT NULL DEFAULT 'admin',
+    "username" TEXT NOT NULL DEFAULT 'admin',
+    "passwordHash" TEXT NOT NULL,
+    "name" TEXT NOT NULL DEFAULT 'เจ้าของหอพัก (Admin)',
+    "role" TEXT NOT NULL DEFAULT 'ADMIN',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AdminUser_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "AdminUser_username_key" ON "AdminUser"("username");
+
 -- ตาราง Setting: ข้อมูลที่พัก, อัตราน้ำ-ไฟ, รหัสผ่าน
 CREATE TABLE IF NOT EXISTS "Setting" (
     "id" INTEGER NOT NULL DEFAULT 1,
@@ -197,6 +211,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS "Invoice_invoiceNumber_key" ON "Invoice"("invo
 -- ═══════════════════════════════════════════════════════════════
 -- 2. ข้อมูลเริ่มต้น (Initial Data / Sample Rooms)
 -- ═══════════════════════════════════════════════════════════════
+
+-- ใส่ข้อมูลผู้ดูแลระบบเริ่มต้น (id: admin, username: admin, password: admin1234)
+INSERT INTO "AdminUser" (
+    "id", "username", "passwordHash", "name", "role", "createdAt", "updatedAt"
+) VALUES (
+    'admin',
+    'admin',
+    '$2a$10$TkHG/50f8GXcFOiVP/YtueNYRzltNwbxKRxoQGIJTtTBXCPsZa9dy',
+    'เจ้าของหอพัก (Admin)',
+    'ADMIN',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+) ON CONFLICT ("id") DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash";
 
 -- ใส่ข้อมูลการตั้งค่าเริ่มต้น (รหัสผ่านเริ่มต้น: admin1234)
 INSERT INTO "Setting" (
