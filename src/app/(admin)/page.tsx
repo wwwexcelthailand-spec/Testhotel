@@ -15,6 +15,7 @@ import {
   Sparkles,
   FileWarning,
   Phone,
+  RotateCcw,
 } from "lucide-react";
 import {
   formatCurrency,
@@ -103,15 +104,28 @@ interface DashboardData {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
+    setError("");
+    setLoading(true);
     try {
-      const res = await fetch("/api/dashboard", { cache: "no-store" });
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
+      const res = await fetch(`/api/dashboard?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: {
+          Pragma: "no-cache",
+          "Cache-Control": "no-cache",
+        },
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "ไม่สามารถโหลดข้อมูลแดชบอร์ดได้");
       }
+      const json = await res.json();
+      setData(json);
+    } catch (err: any) {
+      setError(err?.message || "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
     }
@@ -152,7 +166,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading || !data) {
+  if (loading && !data) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-44 rounded-2xl bg-[#eeeeee]" />
@@ -161,6 +175,32 @@ export default function DashboardPage() {
             <div key={n} className="h-28 rounded-2xl bg-white border border-[#eeeeee]" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="bg-white rounded-2xl border border-[#eeeeee] p-8 text-center max-w-lg mx-auto my-8 shadow-sm space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-[#f8e4e4] text-[#ac2d2d] flex items-center justify-center mx-auto">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="font-serif text-xl font-bold text-[#222222]">
+            ไม่สามารถโหลดข้อมูลหน้าหลักได้
+          </h2>
+          <p className="text-xs text-[#666666]">
+            {error || "เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูล"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={loadDashboard}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5c2484] hover:bg-[#421861] text-white text-sm font-semibold transition shadow-sm"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span>ลองโหลดข้อมูลใหม่</span>
+        </button>
       </div>
     );
   }

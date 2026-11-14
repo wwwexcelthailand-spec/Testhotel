@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { toDateString } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function getPreviousMonth(monthStr: string): string {
   const [y, m] = monthStr.split("-").map(Number);
   const dt = new Date(y, m - 1 - 1, 1);

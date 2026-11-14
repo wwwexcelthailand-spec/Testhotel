@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   X,
+  RotateCcw,
 } from "lucide-react";
 import {
   toDateString,
@@ -70,6 +71,7 @@ export default function CalendarPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [leases, setLeases] = useState<Lease[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [bannerMsg, setBannerMsg] = useState<{
     type: "error" | "success";
     text: string;
@@ -99,18 +101,30 @@ export default function CalendarPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = useCallback(async () => {
+    setLoadError("");
+    setLoading(true);
     try {
-      const res = await fetch("/api/bookings", { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        setRooms(data.rooms || []);
-        setBookings(
-          (data.bookings || []).filter(
-            (b: Booking) => b.status === "CONFIRMED" || b.status === "CHECKED_IN"
-          )
-        );
-        setLeases(data.leases || []);
+      const res = await fetch(`/api/bookings?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: {
+          Pragma: "no-cache",
+          "Cache-Control": "no-cache",
+        },
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "ไม่สามารถโหลดข้อมูลปฏิทินห้องพักได้");
       }
+      const data = await res.json();
+      setRooms(data.rooms || []);
+      setBookings(
+        (data.bookings || []).filter(
+          (b: Booking) => b.status === "CONFIRMED" || b.status === "CHECKED_IN"
+        )
+      );
+      setLeases(data.leases || []);
+    } catch (err: any) {
+      setLoadError(err?.message || "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่");
     } finally {
       setLoading(false);
     }
@@ -425,55 +439,92 @@ export default function CalendarPage() {
       )}
 
       {/* ตารางปฏิทิน (Rooms Vertical, Dates Horizontal) */}
-      <div className="bg-white rounded-2xl border border-[#eeeeee] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#dcd4e3] dark:border-[#3d3549] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[980px]">
+          <div id="calendar-grid-container" className="min-w-[1020px]">
             {/* ส่วนหัวตาราง: รายชื่อวันแนวนอน */}
-            <div
-              className="grid border-b border-[#eeeeee] bg-[#fafafa]"
-              style={{
-                gridTemplateColumns: `210px repeat(${DAYS_TO_SHOW}, minmax(56px, 1fr))`,
-              }}
-            >
-              <div className="p-3.5 font-semibold text-xs text-[#222222] border-r border-[#eeeeee] sticky left-0 bg-[#fafafa] z-20">
+            <div className="flex border-b-2 border-[#c8bcd4] dark:border-[#4a4058] bg-[#fafafa]">
+              <div className="w-[210px] shrink-0 p-3.5 font-semibold text-xs text-[#222222] border-r-2 border-[#c8bcd4] dark:border-[#4a4058] sticky left-0 bg-[#fafafa] z-20 flex items-center">
                 ห้องพัก / วันที่
               </div>
-              {dateColumns.map((col) => {
-                const isToday = col.dateStr === todayStr;
-                const isPast = col.dateStr < todayStr;
-                return (
-                  <div
-                    key={col.dateStr}
-                    className={`py-2.5 px-1 text-center border-r border-[#eeeeee] last:border-r-0 ${
-                      isToday
-                        ? "bg-[#5c2484] text-white"
-                        : isPast
-                        ? "bg-[#f4f1f7]/70 text-[#999999]"
-                        : col.isWeekend
-                        ? "bg-[#f5eef9]/60 text-[#222222]"
-                        : "text-[#222222]"
-                    }`}
-                    title={isPast ? `${formatThaiDate(col.dateStr)} (วันในอดีต)` : undefined}
-                  >
-                    <p
-                      className={`text-[10px] font-medium ${
-                        isToday ? "text-white/90" : isPast ? "text-[#aaaaaa]" : "text-[#666666]"
+              <div
+                className="flex-1 grid"
+                style={{
+                  gridTemplateColumns: `repeat(${DAYS_TO_SHOW}, minmax(58px, 1fr))`,
+                }}
+              >
+                {dateColumns.map((col) => {
+                  const isToday = col.dateStr === todayStr;
+                  const isPast = col.dateStr < todayStr;
+                  return (
+                    <div
+                      key={col.dateStr}
+                      className={`py-2.5 px-1 text-center border-r border-[#dcd4e3] dark:border-[#3d3549] last:border-r-0 ${
+                        isToday
+                          ? "bg-[#5c2484] text-white"
+                          : isPast
+                          ? "bg-[#f4f1f7]/70 dark:bg-[#1e1a24] text-[#999999]"
+                          : col.isWeekend
+                          ? "bg-[#f5eef9]/60 text-[#222222]"
+                          : "text-[#222222]"
                       }`}
+                      title={isPast ? `${formatThaiDate(col.dateStr)} (วันในอดีต)` : undefined}
                     >
-                      {col.weekday}
-                    </p>
-                    <p className="text-sm font-bold leading-tight">
-                      {col.dayNum}/{col.monthNum}
-                    </p>
-                  </div>
-                );
-              })}
+                      <p
+                        className={`text-[10px] font-medium ${
+                          isToday ? "text-white/90" : isPast ? "text-[#aaaaaa]" : "text-[#666666]"
+                        }`}
+                      >
+                        {col.weekday}
+                      </p>
+                      <p className="text-sm font-bold leading-tight">
+                        {col.dayNum}/{col.monthNum}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* แถวแต่ละห้องพัก */}
             {loading ? (
               <div className="p-12 text-center text-xs text-[#777777]">
                 กำลังโหลดตารางปฏิทินห้องพัก...
+              </div>
+            ) : loadError ? (
+              <div className="p-10 text-center space-y-3">
+                <p className="text-sm font-semibold text-[#ac2d2d]">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={loadData}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5c2484] hover:bg-[#421861] text-white text-xs font-semibold transition"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>โหลดตารางใหม่อีกครั้ง</span>
+                </button>
+              </div>
+            ) : rooms.length === 0 ? (
+              <div className="p-12 text-center space-y-3">
+                <p className="text-sm text-[#666666]">
+                  ยังไม่มีข้อมูลห้องพักในระบบ กรุณาเพิ่มห้องพักหรือนำเข้าข้อมูลตัวอย่างก่อนใช้งานปฏิทิน
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={loadData}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#dddddd] hover:bg-[#f5eef9] text-xs font-semibold text-[#222222] transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>รีเฟรช</span>
+                  </button>
+                  <Link
+                    href="/rooms"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5c2484] hover:bg-[#421861] text-white text-xs font-semibold transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>ไปหน้าจัดการห้องพัก</span>
+                  </Link>
+                </div>
               </div>
             ) : (
               rooms.map((room) => {
@@ -500,13 +551,10 @@ export default function CalendarPage() {
                 return (
                   <div
                     key={room.id}
-                    className="grid border-b border-[#eeeeee] last:border-b-0 relative group"
-                    style={{
-                      gridTemplateColumns: `210px repeat(${DAYS_TO_SHOW}, minmax(56px, 1fr))`,
-                    }}
+                    className="flex border-b border-[#dcd4e3] dark:border-[#3d3549] last:border-b-0 relative group"
                   >
                     {/* คอลัมน์ซ้าย: ข้อมูลห้องพัก */}
-                    <div className="p-3 border-r border-[#eeeeee] sticky left-0 bg-white z-20 flex flex-col justify-between">
+                    <div className="w-[210px] shrink-0 p-3 border-r-2 border-[#c8bcd4] dark:border-[#4a4058] sticky left-0 bg-white z-20 flex flex-col justify-between">
                       <div className="flex items-center justify-between gap-1">
                         <span className="font-bold text-sm text-[#222222]">
                           ห้อง {room.number}
@@ -525,10 +573,9 @@ export default function CalendarPage() {
 
                     {/* ช่องวันที่ 14 วัน + Overlay แถบการจอง */}
                     <div
-                      className="col-span-14 grid relative h-16"
+                      className="flex-1 grid relative min-h-[68px]"
                       style={{
-                        gridColumn: `2 / span ${DAYS_TO_SHOW}`,
-                        gridTemplateColumns: `repeat(${DAYS_TO_SHOW}, minmax(56px, 1fr))`,
+                        gridTemplateColumns: `repeat(${DAYS_TO_SHOW}, minmax(58px, 1fr))`,
                       }}
                     >
                       {dateColumns.map((col) => {
@@ -570,11 +617,11 @@ export default function CalendarPage() {
                               handleDropOnCell(room.id, col.dateStr);
                             }}
                             onClick={() => handleCellClick(room, col.dateStr)}
-                            className={`border-r border-[#eeeeee] last:border-r-0 h-full transition relative ${
+                            className={`border-r border-[#dcd4e3] dark:border-[#3d3549] last:border-r-0 h-full transition relative ${
                               leaseInCell
                                 ? "bg-[#eeeeee]/70 cursor-not-allowed"
                                 : isPast
-                                ? "bg-[#f4f1f7]/65 cursor-not-allowed hover:bg-[#ece7f2]/60"
+                                ? "bg-[#f4f1f7]/65 dark:bg-[#1e1a24] cursor-not-allowed hover:bg-[#ece7f2]/60"
                                 : isHovered
                                 ? "bg-[#f5eef9] cursor-pointer"
                                 : col.dateStr === todayStr

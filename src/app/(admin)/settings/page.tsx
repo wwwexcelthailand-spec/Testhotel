@@ -73,7 +73,13 @@ export default function SettingsPage() {
 
   const loadSettings = useCallback(async () => {
     try {
-      const res = await fetch("/api/settings", { cache: "no-store" });
+      const res = await fetch(`/api/settings?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: {
+          Pragma: "no-cache",
+          "Cache-Control": "no-cache",
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         setForm({
@@ -92,6 +98,18 @@ export default function SettingsPage() {
           newPassword: "",
         });
         setSampleRoomsCount(data.sampleRoomsCount ?? 0);
+        try {
+          if (data.propertyName) {
+            localStorage.setItem("rm_property_name", data.propertyName);
+          }
+          if (data.loginImageUrl) {
+            localStorage.setItem("rm_login_image", data.loginImageUrl);
+          } else if (data.loginImageUrl === "") {
+            localStorage.removeItem("rm_login_image");
+          }
+        } catch {
+          // ignore storage errors
+        }
       }
     } finally {
       setLoading(false);
@@ -179,10 +197,28 @@ export default function SettingsPage() {
           ...(form.newPassword ? { newPassword: form.newPassword } : {}),
         }),
       });
+      const data = await res.json();
       if (res.ok) {
+        try {
+          if (form.propertyName) {
+            localStorage.setItem("rm_property_name", form.propertyName);
+          }
+          if (form.loginImageUrl) {
+            localStorage.setItem("rm_login_image", form.loginImageUrl);
+          } else {
+            localStorage.removeItem("rm_login_image");
+          }
+          window.dispatchEvent(new Event("settings-updated"));
+        } catch {
+          // ignore storage errors
+        }
         setMessage("บันทึกการตั้งค่าเรียบร้อยแล้ว");
         setForm((prev) => ({ ...prev, newPassword: "" }));
+      } else {
+        setErrorMessage(data.error || "ไม่สามารถบันทึกการตั้งค่าได้");
       }
+    } catch {
+      setErrorMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์เพื่อบันทึกการตั้งค่าได้");
     } finally {
       setSaving(false);
     }

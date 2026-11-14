@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { checkLeaseAvailability } from "@/lib/availability";
 import { toDateString } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const today = toDateString(new Date());

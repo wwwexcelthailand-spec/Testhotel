@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { checkDailyBookingAvailability } from "@/lib/availability";
 import { calculateNights, toDateString } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const [bookings, leases, rooms, settings] = await Promise.all([

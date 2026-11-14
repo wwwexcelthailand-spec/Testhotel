@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -51,6 +51,47 @@ export default function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [propertyName, setPropertyName] = useState("The Retford");
+
+  useEffect(() => {
+    function syncFromStorage() {
+      try {
+        const cached = localStorage.getItem("rm_property_name");
+        if (cached) setPropertyName(cached);
+      } catch {
+        // ignore storage errors
+      }
+    }
+
+    syncFromStorage();
+
+    async function fetchPropertyName() {
+      try {
+        const res = await fetch(`/api/settings?t=${Date.now()}`, {
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.propertyName) {
+            setPropertyName(data.propertyName);
+            try {
+              localStorage.setItem("rm_property_name", data.propertyName);
+            } catch {
+              // ignore storage errors
+            }
+          }
+        }
+      } catch {
+        // fallback to cached/default
+      }
+    }
+
+    fetchPropertyName();
+    window.addEventListener("settings-updated", syncFromStorage);
+    return () => {
+      window.removeEventListener("settings-updated", syncFromStorage);
+    };
+  }, []);
 
   async function handleLogout() {
     await fetch("/api/auth", { method: "DELETE" });
@@ -67,8 +108,8 @@ export default function AdminShell({
             <Building2 className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-serif text-lg font-bold text-[#222222] truncate">
-              The Retford
+            <h1 className="font-serif text-lg font-bold text-[#222222] truncate" title={propertyName}>
+              {propertyName}
             </h1>
             <p className="text-xs text-[#666666] truncate">
               ระบบจัดการห้องพัก (Owner Admin)
@@ -120,8 +161,8 @@ export default function AdminShell({
           <div className="w-8 h-8 rounded-lg bg-[#5c2484] flex items-center justify-center text-white">
             <Building2 className="w-4 h-4" />
           </div>
-          <span className="font-serif font-bold text-base text-[#222222]">
-            The Retford Admin
+          <span className="font-serif font-bold text-base text-[#222222] truncate max-w-[180px]" title={propertyName}>
+            {propertyName}
           </span>
         </div>
         <div className="flex items-center gap-2">

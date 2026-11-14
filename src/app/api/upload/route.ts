@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -13,22 +16,34 @@ export async function POST(request: Request) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const mime = file.type || "application/octet-stream";
+
+    const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL || "";
+    const isServerlessOrPostgres =
+      Boolean(process.env.NETLIFY) ||
+      process.env.NODE_ENV === "production" ||
+      dbUrl.startsWith("postgres://") ||
+      dbUrl.startsWith("postgresql://");
 
     let fileUrl = "";
-    try {
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await mkdir(uploadDir, { recursive: true });
-      const timestamp = Date.now();
-      const sanitizedOriginal = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const filename = `${timestamp}-${sanitizedOriginal}`;
-      const filepath = path.join(uploadDir, filename);
-      await writeFile(filepath, buffer);
-      fileUrl = `/uploads/${filename}`;
-    } catch {
-      // Serverless (Netlify/Vercel) fallback: แปลงเป็น Data URI เมื่อไฟล์ซิสเต็มเป็นแบบ Read-only
+    if (isServerlessOrPostgres) {
+      // บันทึกเป็น Base64 Data URI เพื่อเก็บลงฐานข้อมูล Supabase โดยตรง ไม่หายเมื่อ Serverless container รีสตาร์ท
       const base64 = buffer.toString("base64");
-      const mime = file.type || "application/octet-stream";
       fileUrl = `data:${mime};base64,${base64}`;
+    } else {
+      try {
+        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        await mkdir(uploadDir, { recursive: true });
+        const timestamp = Date.now();
+        const sanitizedOriginal = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const filename = `${timestamp}-${sanitizedOriginal}`;
+        const filepath = path.join(uploadDir, filename);
+        await writeFile(filepath, buffer);
+        fileUrl = `/uploads/${filename}`;
+      } catch {
+        const base64 = buffer.toString("base64");
+        fileUrl = `data:${mime};base64,${base64}`;
+      }
     }
 
     return NextResponse.json({

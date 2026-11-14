@@ -18,20 +18,52 @@ export default function LoginPage() {
   const [propertyName, setPropertyName] = useState("เดอะ เรทฟอร์ด เรสซิเดนซ์");
 
   useEffect(() => {
+    try {
+      const cachedName = localStorage.getItem("rm_property_name");
+      const cachedImage = localStorage.getItem("rm_login_image");
+      if (cachedName) setPropertyName(cachedName);
+      if (cachedImage) setLoginImageUrl(cachedImage);
+    } catch {
+      // ignore storage errors
+    }
+
     async function fetchSettings() {
       try {
-        const res = await fetch("/api/settings", { cache: "no-store" });
+        const res = await fetch(`/api/settings?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            Pragma: "no-cache",
+            "Cache-Control": "no-cache",
+          },
+        });
         if (res.ok) {
           const data = await res.json();
-          if (data.loginImageUrl) {
-            setLoginImageUrl(data.loginImageUrl);
-          }
           if (data.propertyName) {
             setPropertyName(data.propertyName);
+            try {
+              localStorage.setItem("rm_property_name", data.propertyName);
+            } catch {
+              // ignore storage errors
+            }
+          }
+          if (data.loginImageUrl) {
+            setLoginImageUrl(data.loginImageUrl);
+            try {
+              localStorage.setItem("rm_login_image", data.loginImageUrl);
+            } catch {
+              // ignore storage errors
+            }
+          } else if (data.loginImageUrl === "") {
+            setLoginImageUrl("");
+            try {
+              localStorage.removeItem("rm_login_image");
+            } catch {
+              // ignore storage errors
+            }
           }
         }
       } catch {
-        // use default fallback
+        // use cached or default fallback
       }
     }
     fetchSettings();
@@ -49,7 +81,11 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "รหัสผ่านไม่ถูกต้อง");
+        if (data.detail && data.detail !== data.error) {
+          setError(`${data.error}\n(${data.detail})`);
+        } else {
+          setError(data.error || "รหัสผ่านไม่ถูกต้อง");
+        }
         setLoading(false);
         return;
       }

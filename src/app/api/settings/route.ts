@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { clearSampleData, seedSampleData } from "../../../../prisma/seed";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     let setting = await prisma.setting.findUnique({ where: { id: 1 } });
@@ -13,11 +16,20 @@ export async function GET() {
       where: { isSample: true },
     });
     const { passwordHash, ...safeSetting } = setting;
-    return NextResponse.json({
-      ...safeSetting,
-      hasCustomPassword: Boolean(passwordHash),
-      sampleRoomsCount,
-    });
+    return NextResponse.json(
+      {
+        ...safeSetting,
+        hasCustomPassword: Boolean(passwordHash),
+        sampleRoomsCount,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("GET /api/settings error:", error);
     return NextResponse.json(

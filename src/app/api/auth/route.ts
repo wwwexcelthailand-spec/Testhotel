@@ -5,6 +5,9 @@ import {
   clearAdminSessionCookie,
 } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -32,6 +35,8 @@ export async function POST(request: Request) {
       userHint = "ยังไม่ได้สร้างตารางใน Supabase กรุณานำโค้ดในไฟล์ supabase-schema.sql ไปวางใน Supabase -> SQL Editor แล้วกด Run";
     } else if (errorMsg.includes("Can't reach database server") || errorMsg.includes("Authentication failed")) {
       userHint = "ไม่สามารถเชื่อมต่อ Supabase ได้ กรุณาตรวจสอบรหัสผ่านใน DATABASE_URL หรือโหมด Connection Pooler (พอร์ต 6543)";
+    } else if (errorMsg.includes("42P05") || errorMsg.includes("prepared statement")) {
+      userHint = "การเชื่อมต่อฐานข้อมูล Pooler เกิดการชนกัน (42P05) กรุณาเพิ่ม ?pgbouncer=true ต่อท้าย DATABASE_URL ใน Netlify หรือลองเข้าสู่ระบบใหม่อีกครั้ง";
     } else if (errorMsg.includes("Query engine") || errorMsg.includes("binaryTargets")) {
       userHint = "Prisma Query Engine ไม่ตรงกับระบบ Netlify กรุณาตรวจสอบ schema.prisma และ netlify.toml";
     }
