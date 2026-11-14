@@ -67,7 +67,6 @@ export async function PUT(request: Request) {
       const hashed = await bcrypt.hash(String(newPassword).trim(), 10);
       data.passwordHash = hashed;
       try {
-        // @ts-expect-error adminUser model
         await prisma.adminUser.upsert({
           where: { username: "admin" },
           update: { passwordHash: hashed },

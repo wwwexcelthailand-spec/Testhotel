@@ -32,7 +32,6 @@ export async function verifyAdminPassword(password: string, username = "admin"):
 
   // 1. ตรวจสอบจากตาราง AdminUser ในฐานข้อมูล
   try {
-    // @ts-expect-error adminUser model
     const admin = await prisma.adminUser.findFirst({
       where: {
         OR: [

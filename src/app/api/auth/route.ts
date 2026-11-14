@@ -35,10 +35,6 @@ export async function POST(request: Request) {
     } else if (errorMsg.includes("Query engine") || errorMsg.includes("binaryTargets")) {
       userHint = "Prisma Query Engine ไม่ตรงกับระบบ Netlify กรุณาตรวจสอบ schema.prisma และ netlify.toml";
     }
-      userHint = "ไม่สามารถเชื่อมต่อ Supabase ได้ กรุณาตรวจสอบรหัสผ่านใน DATABASE_URL หรือโหมด Connection Pooler (พอร์ต 6543)";
-    } else if (errorMsg.includes("Query engine") || errorMsg.includes("binaryTargets")) {
-      userHint = "Prisma Query Engine ไม่ตรงกับระบบ Netlify กรุณาตรวจสอบ schema.prisma และ netlify.toml";
-    }
 
     return NextResponse.json(
       { 
